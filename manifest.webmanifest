@@ -1,0 +1,17 @@
+{
+  "name": "Typing Trainer — Infinite English Practice",
+  "short_name": "Typing Trainer",
+  "description": "Improve English typing, listening, vocabulary and grammar through interactive practice.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
