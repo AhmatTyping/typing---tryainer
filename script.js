@@ -167,6 +167,56 @@ for(const [t,base] of Object.entries(extraBase)){pools[t]={};for(const lvl of ['
 const TOPIC_LABELS={daily:'Daily Life',food:'Food & Cooking',home:'Home & Household',shopping:'Shopping & Consumer Habits',family:'Family & Relationships',fashion:'Fashion & Style',parenting:'Parenting',habits:'Personal Habits & Routines',minimalism:'Minimalism',education:'Education',languagelearning:'Language Learning',studyskills:'Study Skills',exams:'Exams & Testing',highereducation:'Higher Education',onlinelearning:'Online Learning',work:'Work & Business',careers:'Careers & Job Hunting',entrepreneurship:'Entrepreneurship',leadership:'Leadership & Management',remotework:'Remote Work',workplaceculture:'Workplace Culture',technology:'Technology',science:'Science',ai:'Artificial Intelligence',space:'Space & Astronomy',internet:'Internet & Social Media',robotics:'Robotics',innovation:'Innovation & Invention',cybersecurity:'Cybersecurity',onlineprivacy:'Online Privacy',digitalliteracy:'Digital Literacy',ecommerce:'Online Shopping & E-commerce',remotecollaboration:'Remote Collaboration Tools',health:'Health & Wellness',mentalhealth:'Mental Health',nutrition:'Nutrition',fitness:'Fitness & Exercise',sleep:'Sleep & Rest',medicine:'Medicine & Healthcare',publichealth:'Public Health',finance:'Money & Personal Finance',economics:'Economics',investing:'Investing & Markets',trade:'Global Trade',consumereconomy:'Consumer Economy',environment:'Environment',geography:'Geography',climatechange:'Climate Change',wildlife:'Wildlife & Animals',disasters:'Natural Disasters',oceans:'Oceans & Marine Life',weather:'Weather',seasons:'Seasons',culture:'Culture & Society',traditions:'Traditions & Festivals',art:'Art & Museums',music:'Music',literature:'Literature',social:'Social Issues',law:'Law & Critical Thinking',ethics:'Ethics',government:'Government & Politics',humanrights:'Human Rights',crime:'Crime & Justice',communication:'Communication',publicspeaking:'Public Speaking',emotionalintelligence:'Emotional Intelligence',timemanagement:'Time Management',motivation:'Motivation & Goals',creativity:'Creativity',media:'Media & News',movies:'Movies & Television',socialmediatrends:'Social Media Trends',journalism:'Journalism',gaming:'Video Games',travel:'Travel',tourism:'Tourism',transportation:'Transportation',adventure:'Adventure & Outdoors',worldcultures:'World Cultures',sports:'Sports',olympics:'Olympic Games',outdoorrecreation:'Outdoor Recreation',teamsports:'Team Sports',extremesports:'Extreme Sports',history:'History',ancientcivilizations:'Ancient Civilizations',wars:'Wars & Conflicts',historicalfigures:'Historical Figures',exploration:'Exploration & Discovery',philosophy:'Philosophy',psychology:'Psychology',logic:'Logic & Reasoning',humanbehavior:'Human Behavior',happiness:'Happiness & Wellbeing',poverty:'Poverty & Inequality',population:'Population & Demographics',globalhealth:'Global Health',migration:'Migration',farming:'Farming & Agriculture',foodsecurity:'Food Security',sustainablefood:'Sustainable Food',rurallife:'Rural Life',citylife:'City Life',architecture:'Architecture & Design',urbanplanning:'Urban Planning',housing:'Housing',visualarts:'Visual Arts',photography:'Photography',design:'Design',creativewriting:'Creative Writing',filmmaking:'Filmmaking'};
 function topicLabel(t){return TOPIC_LABELS[t]||t}
 const STABLE_TOPIC_DATA={'Everyday Life':[{value:'daily',label:'Daily Life'},{value:'food',label:'Food & Cooking'},{value:'home',label:'Home & Household'},{value:'shopping',label:'Shopping & Consumer Habits'},{value:'family',label:'Family & Relationships'},{value:'fashion',label:'Fashion & Style'},{value:'parenting',label:'Parenting'},{value:'habits',label:'Personal Habits & Routines'},{value:'minimalism',label:'Minimalism'}],'Education & Learning':[{value:'education',label:'Education'},{value:'languagelearning',label:'Language Learning'},{value:'studyskills',label:'Study Skills'},{value:'exams',label:'Exams & Testing'},{value:'highereducation',label:'Higher Education'},{value:'onlinelearning',label:'Online Learning'}],'Work & Career':[{value:'work',label:'Work & Business'},{value:'careers',label:'Careers & Job Hunting'},{value:'entrepreneurship',label:'Entrepreneurship'},{value:'leadership',label:'Leadership & Management'},{value:'remotework',label:'Remote Work'},{value:'workplaceculture',label:'Workplace Culture'}],'Science & Technology':[{value:'technology',label:'Technology'},{value:'science',label:'Science'},{value:'ai',label:'Artificial Intelligence'},{value:'space',label:'Space & Astronomy'},{value:'internet',label:'Internet & Social Media'},{value:'robotics',label:'Robotics'},{value:'innovation',label:'Innovation & Invention'}],'Digital Life & Security':[{value:'cybersecurity',label:'Cybersecurity'},{value:'onlineprivacy',label:'Online Privacy'},{value:'digitalliteracy',label:'Digital Literacy'},{value:'ecommerce',label:'Online Shopping & E-commerce'},{value:'remotecollaboration',label:'Remote Collaboration Tools'}],'Health & Wellness':[{value:'health',label:'Health & Wellness'},{value:'mentalhealth',label:'Mental Health'},{value:'nutrition',label:'Nutrition'},{value:'fitness',label:'Fitness & Exercise'},{value:'sleep',label:'Sleep & Rest'},{value:'medicine',label:'Medicine & Healthcare'},{value:'publichealth',label:'Public Health'}],'Money & Economics':[{value:'finance',label:'Money & Personal Finance'},{value:'economics',label:'Economics'},{value:'investing',label:'Investing & Markets'},{value:'trade',label:'Global Trade'},{value:'consumereconomy',label:'Consumer Economy'}],'Nature & Environment':[{value:'environment',label:'Environment'},{value:'geography',label:'Geography'},{value:'climatechange',label:'Climate Change'},{value:'wildlife',label:'Wildlife & Animals'},{value:'disasters',label:'Natural Disasters'},{value:'oceans',label:'Oceans & Marine Life'},{value:'weather',label:'Weather'},{value:'seasons',label:'Seasons'}],'Culture & Society':[{value:'culture',label:'Culture & Society'},{value:'traditions',label:'Traditions & Festivals'},{value:'art',label:'Art & Museums'},{value:'music',label:'Music'},{value:'literature',label:'Literature'},{value:'social',label:'Social Issues'}],'Law, Ethics & Government':[{value:'law',label:'Law & Critical Thinking'},{value:'ethics',label:'Ethics'},{value:'government',label:'Government & Politics'},{value:'humanrights',label:'Human Rights'},{value:'crime',label:'Crime & Justice'}],'Communication & Personal Development':[{value:'communication',label:'Communication'},{value:'publicspeaking',label:'Public Speaking'},{value:'emotionalintelligence',label:'Emotional Intelligence'},{value:'timemanagement',label:'Time Management'},{value:'motivation',label:'Motivation & Goals'},{value:'creativity',label:'Creativity'}],'Media & Entertainment':[{value:'media',label:'Media & News'},{value:'movies',label:'Movies & Television'},{value:'socialmediatrends',label:'Social Media Trends'},{value:'journalism',label:'Journalism'},{value:'gaming',label:'Video Games'}],'Travel & Exploration':[{value:'travel',label:'Travel'},{value:'tourism',label:'Tourism'},{value:'transportation',label:'Transportation'},{value:'adventure',label:'Adventure & Outdoors'},{value:'worldcultures',label:'World Cultures'}],'Sports & Recreation':[{value:'sports',label:'Sports'},{value:'olympics',label:'Olympic Games'},{value:'outdoorrecreation',label:'Outdoor Recreation'},{value:'teamsports',label:'Team Sports'},{value:'extremesports',label:'Extreme Sports'}],'History & Civilization':[{value:'history',label:'History'},{value:'ancientcivilizations',label:'Ancient Civilizations'},{value:'wars',label:'Wars & Conflicts'},{value:'historicalfigures',label:'Historical Figures'},{value:'exploration',label:'Exploration & Discovery'}],'Philosophy & Psychology':[{value:'philosophy',label:'Philosophy'},{value:'psychology',label:'Psychology'},{value:'logic',label:'Logic & Reasoning'},{value:'humanbehavior',label:'Human Behavior'},{value:'happiness',label:'Happiness & Wellbeing'}],'Global Issues':[{value:'poverty',label:'Poverty & Inequality'},{value:'population',label:'Population & Demographics'},{value:'globalhealth',label:'Global Health'},{value:'migration',label:'Migration'}],'Agriculture & Food Systems':[{value:'farming',label:'Farming & Agriculture'},{value:'foodsecurity',label:'Food Security'},{value:'sustainablefood',label:'Sustainable Food'},{value:'rurallife',label:'Rural Life'}],'Urban Life & Architecture':[{value:'citylife',label:'City Life'},{value:'architecture',label:'Architecture & Design'},{value:'urbanplanning',label:'Urban Planning'},{value:'housing',label:'Housing'}],'Arts & Creativity':[{value:'visualarts',label:'Visual Arts'},{value:'photography',label:'Photography'},{value:'design',label:'Design'},{value:'creativewriting',label:'Creative Writing'},{value:'filmmaking',label:'Filmmaking'}]};
+/* ---- Subject-verb agreement helper (fixes mismatches like "A student plan" -> "A student plans") ---- */
+function isPluralSubject(subj){
+  const s=subj.trim();
+  if(/^(many|several|most|all|both|these|those)\b/i.test(s)) return true;
+  if(/^(a|an)\b/i.test(s)) return false;
+  const words=s.split(/\s+/);
+  const last=words[words.length-1].toLowerCase();
+  const singularExceptions=/^(business|process|success|access|progress|purpose|structure|adventure|homework|news|analysis|awareness)$/;
+  if(/s$/.test(last) && !singularExceptions.test(last) && !/ss$/.test(last)) return true;
+  return false;
+}
+function baseVerbForm(word){
+  const w=word.toLowerCase();
+  if(w==='has')return 'have';
+  if(w==='does')return 'do';
+  if(w==='goes')return 'go';
+  if(/(ches|shes|sses|xes|zes|oes)$/.test(w))return w.slice(0,-2);
+  if(w.endsWith('ies')&&w.length>4)return w.slice(0,-3)+'y';
+  if(w.endsWith('s')&&w.length>2&&!w.endsWith('ss')&&!w.endsWith('us')&&!w.endsWith('is'))return w.slice(0,-1);
+  return w;
+}
+function conjugateThirdSingular(base){
+  const w=base.toLowerCase();
+  if(w==='have')return 'has';
+  if(w==='do')return 'does';
+  if(w==='go')return 'goes';
+  if(/(ch|sh|ss|x|z|o)$/.test(w))return w+'es';
+  if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+'ies';
+  return w+'s';
+}
+const MODAL_VERBS=new Set(['can','could','may','might','must','shall','should','will','would']);
+function conjugateAction(subject,action){
+  const words=action.split(' ');
+  const first=words[0].toLowerCase();
+  if(MODAL_VERBS.has(first))return action; // modal verbs never take -s
+  const base=baseVerbForm(words[0]);
+  const plural=isPluralSubject(subject);
+  words[0]=plural?base:conjugateThirdSingular(base);
+  return words.join(' ');
+}
+
+/* ---- Level-aware opening sentence (complexity now matches the chosen level) ---- */
+const OPENING_BY_LEVEL={
+  A1:t=>`${t} is easy to talk about.`,
+  A2:t=>`${t} is something people often think about.`,
+  B1:t=>`${t} can be an interesting topic to explore.`,
+  B2:t=>`${t} raises questions that are worth considering carefully.`,
+  C1:t=>`${t} raises questions that merit careful and critical analysis.`
+};
+
 function generateText(level,topic,length){
   const p=pools[topic][level];
   const counts={short:4,medium:7,long:11};
@@ -174,10 +224,11 @@ function generateText(level,topic,length){
   const sentences=[];
   let lastSub="",lastAct="";
   for(let i=0;i<count;i++){
-    let sub=rand(p.subjects), act=rand(p.actions), det=rand(p.details);
+    let sub=rand(p.subjects), rawAct=rand(p.actions), det=rand(p.details);
     let guard=0;
-    while((sub===lastSub && act===lastAct)&&guard<5){sub=rand(p.subjects);act=rand(p.actions);guard++}
-    lastSub=sub;lastAct=act;
+    while((sub===lastSub && rawAct===lastAct)&&guard<5){sub=rand(p.subjects);rawAct=rand(p.actions);guard++}
+    lastSub=sub;lastAct=rawAct;
+    const act=conjugateAction(sub,rawAct);
     const templates=[
       `${sub} ${act} ${det}.`,
       `In many situations, ${sub.toLowerCase()} ${act} ${det}.`,
@@ -186,34 +237,9 @@ function generateText(level,topic,length){
     ];
     sentences.push(rand(templates));
   }
-  // Light variation: prepend a topic-specific opening.
-  const openings={
-    daily:["Everyday life gives us many small opportunities to learn."],
-    education:["Learning becomes easier when ideas are connected to regular practice."],
-    work:["Good work often depends on clear priorities and reliable communication."],
-    technology:["Technology changes quickly, but the way we use it still matters."],
-    travel:["Travel can teach us more than facts about a new place."],
-    science:["Science begins with questions and develops through careful evidence."],
-    environment:["Environmental choices often connect everyday actions with long-term effects."],
-    culture:["Culture is expressed through habits, stories, language, and shared experiences."],
-    law:["Law provides rules and procedures for resolving disagreements in society."],
-    communication:["Communication is not only about speaking; it is also about listening and interpretation."],
-    health:["Healthy habits can influence the way people feel and work each day."],
-    food:["Food connects everyday choices with health, culture, and family life."],
-    finance:["Good financial decisions begin with understanding needs, costs, and priorities."],
-    history:["History helps us examine how people and societies changed over time."],
-    geography:["Geography helps us understand how places, resources, and people are connected."],
-    psychology:["Psychology explores how people think, feel, learn, and behave."],
-    philosophy:["Philosophy encourages us to examine difficult questions and the reasons behind our beliefs."],
-    media:["Modern media can spread information quickly, making careful evaluation increasingly important."],
-    sports:["Sport combines practice, decision-making, cooperation, and physical effort."],
-    economics:["Economics examines how people and institutions make choices when resources are limited."],
-    ethics:["Ethical questions arise when people must decide what they ought to do."],
-    social:["Communities depend on cooperation, communication, and shared expectations."]
-  };
   const body=sentences.join(" ");
-  const openingList=openings[topic]||[`${topicLabel(topic)} gives us useful ideas to explore and discuss.`];
-  return `${rand(openingList)} ${body}`;
+  const opening=OPENING_BY_LEVEL[level] ? OPENING_BY_LEVEL[level](topicLabel(topic)) : `${topicLabel(topic)} gives us useful ideas to explore and discuss.`;
+  return `${opening} ${body}`;
 }
 
 
