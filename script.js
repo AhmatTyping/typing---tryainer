@@ -443,6 +443,17 @@ function isUSVoice(v){return !!v&&/^en[-_]us$/i.test(v.lang||'')}
 function isGBVoice(v){return !!v&&/^en[-_]gb$/i.test(v.lang||'')}
 function isLikelyOffline(v){return /microsoft|desktop|espeak|festival|offline/i.test(v.name||'')}
 function accentMatch(v){ if(preferredAccent==='us')return isUSVoice(v); if(preferredAccent==='gb')return isGBVoice(v); return true; }
+/* Voice quality heuristic: neural/online voices (Google, Microsoft Online Natural) sound
+   near-human; older offline engines (Desktop SAPI, eSpeak, Festival) sound robotic.
+   We now reward quality instead of rewarding "offline" as we did before. */
+function voiceQualityScore(v){
+  const n=(v.name||'').toLowerCase();
+  if(/natural|neural/.test(n)) return 500;
+  if(/google/.test(n)) return 300;
+  if(/online/.test(n)) return 250;
+  if(/desktop|espeak|festival|compact/.test(n)) return -100;
+  return 0;
+}
 function refreshVoiceList(){
  if(!('speechSynthesis' in window))return;
  availableVoices=window.speechSynthesis.getVoices().filter(isEnglishVoice);
@@ -454,7 +465,7 @@ function refreshVoiceList(){
    $('offlineVoiceStatus').textContent='No voice';
    return;
  }
- const score=v=>(v.name===preferredVoiceName?300:0)+(accentMatch(v)?100:0)+(isLikelyOffline(v)?20:0);
+ const score=v=>(v.name===preferredVoiceName?1000:0)+(accentMatch(v)?100:0)+voiceQualityScore(v);
  availableVoices.sort((a,b)=>score(b)-score(a));
  availableVoices.forEach(v=>{
    const accentTag=isUSVoice(v)?' (US)':isGBVoice(v)?' (UK)':'';
