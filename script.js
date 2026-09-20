@@ -4,6 +4,117 @@ let text="", currentLesson=null, currentLevel="A1";
 let startTime=null, timer=null, finished=false, totalErrors=0;
 let speechToken=0, selectedVoice=null;
 const PROGRESS_KEY="typingTrainerProgressV7";
+/* ============ STREAK SYSTEM ============ */
+const STREAK_KEY="typingTrainerStreakV1";
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function getStreakData(){ try{return JSON.parse(localStorage.getItem(STREAK_KEY))||{count:0,longest:0,lastDate:null}}catch(e){return {count:0,longest:0,lastDate:null}} }
+function updateStreak(){
+  const s=getStreakData(); const today=todayStr();
+  if(s.lastDate!==today){
+    const y=new Date(); y.setDate(y.getDate()-1);
+    const yesterday=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+    s.count = (s.lastDate===yesterday) ? (s.count||0)+1 : 1;
+    s.lastDate=today;
+    s.longest=Math.max(s.longest||0, s.count);
+    localStorage.setItem(STREAK_KEY, JSON.stringify(s));
+  }
+  return s;
+}
+function renderStreak(){
+  const pill=$('streakPill'), label=$('streakCount'); if(!pill||!label)return;
+  const s=getStreakData(); const activeToday = s.lastDate===todayStr();
+  label.textContent = (s.count||0) + ((s.count||0)===1?' day streak':' day streak');
+  pill.classList.toggle('active', activeToday && (s.count||0)>0);
+}
+
+/* ============ ACHIEVEMENTS / BADGES ============ */
+const BADGES_KEY="typingTrainerBadgesV1";
+const ACHIEVEMENTS=[
+  {id:'first_test',icon:'🎯',name:'First Steps',desc:'Complete your first test',check:p=>p.tests.length>=1},
+  {id:'tests_10',icon:'📚',name:'Committed',desc:'Complete 10 tests',check:p=>p.tests.length>=10},
+  {id:'tests_50',icon:'🏅',name:'Dedicated Learner',desc:'Complete 50 tests',check:p=>p.tests.length>=50},
+  {id:'tests_100',icon:'👑',name:'Century Club',desc:'Complete 100 tests',check:p=>p.tests.length>=100},
+  {id:'streak_3',icon:'🔥',name:'3-Day Streak',desc:'Practice 3 days in a row',check:(p,s)=>(s.longest||0)>=3},
+  {id:'streak_7',icon:'⚡',name:'Week Warrior',desc:'Practice 7 days in a row',check:(p,s)=>(s.longest||0)>=7},
+  {id:'streak_30',icon:'🌟',name:'Monthly Master',desc:'Practice 30 days in a row',check:(p,s)=>(s.longest||0)>=30},
+  {id:'wpm_40',icon:'⌨️',name:'Speed Typer',desc:'Reach 40 WPM',check:p=>p.tests.some(t=>t.wpm>=40)},
+  {id:'wpm_60',icon:'🚀',name:'Fast Fingers',desc:'Reach 60 WPM',check:p=>p.tests.some(t=>t.wpm>=60)},
+  {id:'wpm_80',icon:'💨',name:'Lightning Hands',desc:'Reach 80 WPM',check:p=>p.tests.some(t=>t.wpm>=80)},
+  {id:'accuracy_100',icon:'💯',name:'Perfectionist',desc:'Score 100% accuracy on a test',check:p=>p.tests.some(t=>t.accuracy>=100)},
+  {id:'all_levels',icon:'🗺️',name:'Level Explorer',desc:'Complete a test at every level (A1–C1)',check:p=>{const s=new Set(p.tests.map(t=>t.level));return ['A1','A2','B1','B2','C1'].every(l=>s.has(l));}}
+];
+function getEarnedBadges(){ try{return JSON.parse(localStorage.getItem(BADGES_KEY))||[]}catch(e){return []} }
+function checkAchievements(progress, streak){
+  const earned=getEarnedBadges(); const newlyEarned=[];
+  for(const a of ACHIEVEMENTS){ if(!earned.includes(a.id) && a.check(progress, streak)){ earned.push(a.id); newlyEarned.push(a); } }
+  if(newlyEarned.length) localStorage.setItem(BADGES_KEY, JSON.stringify(earned));
+  return newlyEarned;
+}
+function renderBadges(){
+  const grid=$('badgesGrid'); if(!grid)return;
+  const earned=getEarnedBadges();
+  grid.innerHTML = ACHIEVEMENTS.map(a=>{
+    const has=earned.includes(a.id);
+    return `<div class="badge-card ${has?'':'locked'}"><span class="badge-icon">${a.icon}</span><span class="badge-name">${a.name}</span><span class="badge-desc">${a.desc}</span></div>`;
+  }).join('');
+}
+let toastQueue=[], toastShowing=false;
+function showAchievementToast(a){ toastQueue.push(a); if(!toastShowing) processToastQueue(); }
+function processToastQueue(){
+  if(!toastQueue.length){ toastShowing=false; return; }
+  toastShowing=true;
+  const a=toastQueue.shift(); const toast=$('achievementToast');
+  if(!toast){ processToastQueue(); return; }
+  $('toastIcon').textContent=a.icon; $('toastName').textContent=a.name;
+  toast.classList.add('show');
+  setTimeout(()=>{ toast.classList.remove('show'); setTimeout(processToastQueue, 400); }, 3200);
+}
+
+/* ============ SHARE RESULT (canvas image card) ============ */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function generateShareCard(){
+  const wpm=$('finalWpm').textContent, acc=$('finalAccuracy').textContent, time=$('finalTime').textContent;
+  const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080;
+  const ctx=canvas.getContext('2d');
+  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  const bg=isLight?'#f4f5f7':'#101113', panel=isLight?'#ffffff':'#22252b', text=isLight?'#15171a':'#eceef0', muted=isLight?'#4b4f57':'#9297a0';
+  ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const pad=60; ctx.fillStyle=panel; roundRect(ctx,pad,pad,canvas.width-pad*2,canvas.height-pad*2,40); ctx.fill();
+  ctx.textAlign='center';
+  ctx.fillStyle='#e2b714'; ctx.font='bold 54px -apple-system, Arial, sans-serif'; ctx.fillText('Bayanlingo', canvas.width/2, pad+120);
+  ctx.fillStyle=muted; ctx.font='28px -apple-system, Arial, sans-serif'; ctx.fillText('My English Practice Result', canvas.width/2, pad+170);
+  function drawStat(x,y,value,label,color){
+    ctx.fillStyle=color; ctx.font='bold 90px -apple-system, Arial, sans-serif'; ctx.fillText(value,x,y);
+    ctx.fillStyle=muted; ctx.font='24px -apple-system, Arial, sans-serif'; ctx.fillText(label,x,y+45);
+  }
+  const midY=canvas.height/2;
+  drawStat(canvas.width*0.28, midY, wpm, 'WPM', '#e2b714');
+  drawStat(canvas.width*0.72, midY, acc, 'ACCURACY', '#6fa8c9');
+  ctx.fillStyle=text; ctx.font='bold 34px -apple-system, Arial, sans-serif'; ctx.fillText('Level: '+currentLevel+'  •  Time: '+time, canvas.width/2, midY+130);
+  ctx.fillStyle=muted; ctx.font='22px -apple-system, Arial, sans-serif'; ctx.fillText('Try it yourself — free English practice', canvas.width/2, canvas.height-pad-40);
+  return canvas;
+}
+$('shareResultBtn')?.addEventListener('click', ()=>{
+  const canvas=generateShareCard();
+  canvas.toBlob(async (blob)=>{
+    if(!blob)return;
+    const shareText=`I just practiced English on Bayanlingo — ${$('finalWpm').textContent} WPM at ${$('finalAccuracy').textContent} accuracy! 🎉`;
+    const file=new File([blob],'bayanlingo-result.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:'Bayanlingo', text:shareText}); return; }catch(e){}
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='bayanlingo-result.png'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+    try{ await navigator.clipboard?.writeText(shareText); alert('Image downloaded! A caption was also copied to your clipboard — paste it when you share the image.'); }
+    catch(e){ alert('Image downloaded! Share it on your favorite platform.'); }
+  },'image/png');
+});
+
 
 function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
@@ -772,122 +883,4 @@ function renderLibrary(){
   box.innerHTML='';
   items.slice().reverse().forEach(item=>{
     const row=document.createElement('div'); row.className='library-item';
-    const words=item.text.trim().split(/\s+/).filter(Boolean).length;
-    const d=new Date(item.savedAt);
-    row.innerHTML=`<div><strong>${escapeHtml(item.label)}</strong><span class="lib-meta">${words} words · saved ${d.toLocaleDateString()}</span></div><div class="lib-actions"><button type="button" class="button small practice-lib">Practice</button><button type="button" class="button small danger delete-lib">Delete</button></div>`;
-    row.querySelector('.practice-lib').onclick=()=>{
-      const lesson={title:item.label,description:'From your personal library.',vocabulary:extractVocabulary(item.text,item.level),grammar:grammarByLevel[item.level],topic:'custom'};
-      loadText(item.text,lesson,item.level);
-      document.getElementById('practice').scrollIntoView({behavior:'smooth'});
-    };
-    row.querySelector('.delete-lib').onclick=()=>{
-      if(!confirm('Delete "'+item.label+'"?'))return;
-      saveLibraryItems(getLibraryItems().filter(x=>x.id!==item.id));
-      renderLibrary();
-    };
-    box.appendChild(row);
-  });
-}
-document.querySelectorAll('#libraryTabs .tab-btn').forEach(b=>b.onclick=()=>{ activeLibraryLevel=b.dataset.level; renderLibrary(); });
-$('libraryFileInput').onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{ $('libraryTextInput').value=ev.target.result; };
-  r.readAsText(f);
-};
-$('libraryAddBtn').onclick=()=>{
-  const label=$('libraryLabelInput').value.trim();
-  const txt=$('libraryTextInput').value.trim();
-  if(!label){ alert('Give this text a topic name first.'); return; }
-  if(!txt){ alert('Paste some text or upload a file first.'); return; }
-  const items=getLibraryItems();
-  items.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7), level:activeLibraryLevel, label, text:txt, savedAt:new Date().toISOString()});
-  saveLibraryItems(items);
-  $('libraryLabelInput').value=''; $('libraryTextInput').value='';
-  renderLibrary();
-};
-renderLibrary();
-
-/* ============ STREAK SYSTEM ============ */
-const STREAK_KEY="typingTrainerStreakV1";
-function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function getStreakData(){ try{return JSON.parse(localStorage.getItem(STREAK_KEY))||{count:0,longest:0,lastDate:null}}catch(e){return {count:0,longest:0,lastDate:null}} }
-function updateStreak(){
-  const s=getStreakData(); const today=todayStr();
-  if(s.lastDate!==today){
-    const y=new Date(); y.setDate(y.getDate()-1);
-    const yesterday=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
-    s.count = (s.lastDate===yesterday) ? (s.count||0)+1 : 1;
-    s.lastDate=today;
-    s.longest=Math.max(s.longest||0, s.count);
-    localStorage.setItem(STREAK_KEY, JSON.stringify(s));
-  }
-  return s;
-}
-function renderStreak(){
-  const pill=$('streakPill'), label=$('streakCount'); if(!pill||!label)return;
-  const s=getStreakData(); const activeToday = s.lastDate===todayStr();
-  label.textContent = (s.count||0) + ((s.count||0)===1?' day streak':' day streak');
-  pill.classList.toggle('active', activeToday && (s.count||0)>0);
-}
-
-/* ============ ACHIEVEMENTS / BADGES ============ */
-const BADGES_KEY="typingTrainerBadgesV1";
-const ACHIEVEMENTS=[
-  {id:'first_test',icon:'🎯',name:'First Steps',desc:'Complete your first test',check:p=>p.tests.length>=1},
-  {id:'tests_10',icon:'📚',name:'Committed',desc:'Complete 10 tests',check:p=>p.tests.length>=10},
-  {id:'tests_50',icon:'🏅',name:'Dedicated Learner',desc:'Complete 50 tests',check:p=>p.tests.length>=50},
-  {id:'tests_100',icon:'👑',name:'Century Club',desc:'Complete 100 tests',check:p=>p.tests.length>=100},
-  {id:'streak_3',icon:'🔥',name:'3-Day Streak',desc:'Practice 3 days in a row',check:(p,s)=>(s.longest||0)>=3},
-  {id:'streak_7',icon:'⚡',name:'Week Warrior',desc:'Practice 7 days in a row',check:(p,s)=>(s.longest||0)>=7},
-  {id:'streak_30',icon:'🌟',name:'Monthly Master',desc:'Practice 30 days in a row',check:(p,s)=>(s.longest||0)>=30},
-  {id:'wpm_40',icon:'⌨️',name:'Speed Typer',desc:'Reach 40 WPM',check:p=>p.tests.some(t=>t.wpm>=40)},
-  {id:'wpm_60',icon:'🚀',name:'Fast Fingers',desc:'Reach 60 WPM',check:p=>p.tests.some(t=>t.wpm>=60)},
-  {id:'wpm_80',icon:'💨',name:'Lightning Hands',desc:'Reach 80 WPM',check:p=>p.tests.some(t=>t.wpm>=80)},
-  {id:'accuracy_100',icon:'💯',name:'Perfectionist',desc:'Score 100% accuracy on a test',check:p=>p.tests.some(t=>t.accuracy>=100)},
-  {id:'all_levels',icon:'🗺️',name:'Level Explorer',desc:'Complete a test at every level (A1–C1)',check:p=>{const s=new Set(p.tests.map(t=>t.level));return ['A1','A2','B1','B2','C1'].every(l=>s.has(l));}}
-];
-function getEarnedBadges(){ try{return JSON.parse(localStorage.getItem(BADGES_KEY))||[]}catch(e){return []} }
-function checkAchievements(progress, streak){
-  const earned=getEarnedBadges(); const newlyEarned=[];
-  for(const a of ACHIEVEMENTS){ if(!earned.includes(a.id) && a.check(progress, streak)){ earned.push(a.id); newlyEarned.push(a); } }
-  if(newlyEarned.length) localStorage.setItem(BADGES_KEY, JSON.stringify(earned));
-  return newlyEarned;
-}
-function renderBadges(){
-  const grid=$('badgesGrid'); if(!grid)return;
-  const earned=getEarnedBadges();
-  grid.innerHTML = ACHIEVEMENTS.map(a=>{
-    const has=earned.includes(a.id);
-    return `<div class="badge-card ${has?'':'locked'}"><span class="badge-icon">${a.icon}</span><span class="badge-name">${a.name}</span><span class="badge-desc">${a.desc}</span></div>`;
-  }).join('');
-}
-let toastQueue=[], toastShowing=false;
-function showAchievementToast(a){ toastQueue.push(a); if(!toastShowing) processToastQueue(); }
-function processToastQueue(){
-  if(!toastQueue.length){ toastShowing=false; return; }
-  toastShowing=true;
-  const a=toastQueue.shift(); const toast=$('achievementToast');
-  if(!toast){ processToastQueue(); return; }
-  $('toastIcon').textContent=a.icon; $('toastName').textContent=a.name;
-  toast.classList.add('show');
-  setTimeout(()=>{ toast.classList.remove('show'); setTimeout(processToastQueue, 400); }, 3200);
-}
-
-/* ============ SHARE RESULT (canvas image card) ============ */
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath(); ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-}
-function generateShareCard(){
-  const wpm=$('finalWpm').textContent, acc=$('finalAccuracy').textContent, time=$('finalTime').textContent;
-  const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080;
-  const ctx=canvas.getContext('2d');
-  const isLight=document.documentElement.getAttribute('data-theme')==='light';
-  const bg=isLight?'#f4f5f7':'#101113', panel=isLight?'#ffffff':'#22252b', text=isLight?'#15171a':'#eceef0', muted=isLight?'#4b4f57':'#9297a0';
-  ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
-  const pad=60; ctx.fillStyle=panel; roundRect(ctx,pad,pad,canvas.width-pad*2,canvas.height-pad*2,40); ctx.fill();
-  ctx.textAlign='center';
-  ctx.fillStyle='#e2b714'; ctx.font='bold 54px -apple-system, Arial, sans-serif'; ctx.fillText('Bayanlingo', canvas.width/2, pad+120);
-  
+    const words=
