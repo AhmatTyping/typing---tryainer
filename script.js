@@ -822,6 +822,7 @@ function saveTestResult(){
   localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));
   const _streak=updateStreak();
   checkAchievements(p,_streak).forEach(showAchievementToast);
+  syncProgressIfLoggedIn();
 }
 function renderProgress(){
   const p=getProgress(), tests=p.tests;
@@ -918,3 +919,112 @@ $('libraryAddBtn').onclick=()=>{
   renderLibrary();
 };
 renderLibrary();
+
+/* ============ AUTH: account, login/signup, cloud progress sync ============ */
+const AUTH_TOKEN_KEY="bayanlingoAuthTokenV1";
+let authEmail=null, authMode="login";
+function getAuthToken(){ return localStorage.getItem(AUTH_TOKEN_KEY); }
+function setAuthToken(token){ if(token) localStorage.setItem(AUTH_TOKEN_KEY, token); else localStorage.removeItem(AUTH_TOKEN_KEY); }
+
+async function apiCall(path, opts={}){
+  const token=getAuthToken();
+  const headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(token) headers['Authorization']='Bearer '+token;
+  const res=await fetch(path, Object.assign({}, opts, {headers}));
+  let data={}; try{ data=await res.json(); }catch(e){}
+  if(!res.ok) throw new Error(data.error||'Request failed');
+  return data;
+}
+
+function getFullLocalState(){
+  return { progress:getProgress(), badges:getEarnedBadges(), streak:getStreakData() };
+}
+function applyFullState(state){
+  if(!state) return;
+  if(state.progress) localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
+  if(state.badges) localStorage.setItem(BADGES_KEY, JSON.stringify(state.badges));
+  if(state.streak) localStorage.setItem(STREAK_KEY, JSON.stringify(state.streak));
+}
+function syncProgressIfLoggedIn(){
+  if(!getAuthToken())return;
+  apiCall('/api/progress',{method:'POST', body:JSON.stringify({data:getFullLocalState()})}).catch(()=>{});
+}
+
+function renderAuthUI(){
+  const btn=$('accountBtn'); if(!btn) return;
+  if(authEmail){ btn.textContent='👤 '+authEmail; btn.title='Click to log out'; }
+  else{ btn.textContent='🔑 Sign in'; btn.title='Log in or create an account'; }
+}
+
+function openAuthModal(mode){
+  authMode=mode||'login';
+  $('authModalOverlay').classList.remove('hidden');
+  $('authError').classList.add('hidden');
+  $('authForm').reset();
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===authMode));
+  $('authSubtitle').textContent = authMode==='login' ? 'Log in to sync your progress across devices.' : 'Create a free account to save your progress in the cloud.';
+  $('authSubmitBtn').textContent = authMode==='login' ? 'Log In' : 'Sign Up';
+  setTimeout(()=>$('authEmail').focus(),50);
+}
+function closeAuthModal(){ $('authModalOverlay').classList.add('hidden'); }
+
+async function doSignup(email,password){
+  const data=await apiCall('/api/signup',{method:'POST', body:JSON.stringify({email,password})});
+  setAuthToken(data.token); authEmail=data.email;
+  await apiCall('/api/progress',{method:'POST', body:JSON.stringify({data:getFullLocalState()})}).catch(()=>{});
+  renderAuthUI();
+}
+async function doLogin(email,password){
+  const data=await apiCall('/api/login',{method:'POST', body:JSON.stringify({email,password})});
+  setAuthToken(data.token); authEmail=data.email;
+  try{
+    const remote=await apiCall('/api/progress',{method:'GET'});
+    if(remote.data){ applyFullState(remote.data); renderProgress(); }
+    else{ await apiCall('/api/progress',{method:'POST', body:JSON.stringify({data:getFullLocalState()})}); }
+  }catch(e){}
+  renderAuthUI();
+}
+async function doLogout(){
+  try{ await apiCall('/api/logout',{method:'POST'}); }catch(e){}
+  setAuthToken(null); authEmail=null;
+  renderAuthUI();
+}
+async function checkAuthOnLoad(){
+  const token=getAuthToken();
+  if(!token) return;
+  try{
+    const meData=await apiCall('/api/me',{method:'GET'});
+    authEmail=meData.email;
+    const remote=await apiCall('/api/progress',{method:'GET'});
+    if(remote.data){ applyFullState(remote.data); renderProgress(); }
+  }catch(e){ setAuthToken(null); authEmail=null; }
+  renderAuthUI();
+}
+
+$('accountBtn').addEventListener('click', ()=>{
+  if(authEmail){ if(confirm('Log out of '+authEmail+'?')) doLogout(); }
+  else openAuthModal('login');
+});
+$('authCloseBtn').addEventListener('click', closeAuthModal);
+$('authModalOverlay').addEventListener('click', e=>{ if(e.target===$('authModalOverlay')) closeAuthModal(); });
+document.querySelectorAll('.auth-tab').forEach(tab=>tab.addEventListener('click', ()=>openAuthModal(tab.dataset.mode)));
+$('authForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const email=$('authEmail').value.trim();
+  const password=$('authPassword').value;
+  const errBox=$('authError'); errBox.classList.add('hidden');
+  const btn=$('authSubmitBtn'); const oldText=btn.textContent; btn.textContent='Please wait…'; btn.disabled=true;
+  try{
+    if(authMode==='signup') await doSignup(email,password);
+    else await doLogin(email,password);
+    closeAuthModal();
+  }catch(err){
+    errBox.textContent=err.message||'Something went wrong.';
+    errBox.classList.remove('hidden');
+  }finally{
+    btn.textContent=oldText; btn.disabled=false;
+  }
+});
+
+renderAuthUI();
+checkAuthOnLoad();

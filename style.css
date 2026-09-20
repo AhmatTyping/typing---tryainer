@@ -325,3 +325,22 @@ footer{text-align:center;color:var(--muted-2);padding:25px 15px 40px;font-size:1
 .achievement-toast .toast-icon{font-size:28px}
 .achievement-toast .toast-title{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
 .achievement-toast .toast-name{font-size:14px;font-weight:700;color:var(--text)}
+
+/* ============ AUTH: account button + login/signup modal (added) ============ */
+.account-btn{background:var(--panel-2);border:1px solid var(--border-strong);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:border-color .15s,color .15s}
+.account-btn:hover{border-color:var(--accent-dim);color:var(--accent)}
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px}
+.auth-overlay.hidden{display:none}
+.auth-modal{background:var(--panel);border:1px solid var(--border-strong);border-radius:16px;padding:28px 26px;max-width:380px;width:100%;position:relative;box-shadow:var(--shadow)}
+.auth-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted-2);font-size:18px;cursor:pointer;padding:4px}
+.auth-close:hover{color:var(--text)}
+.auth-tabs{display:flex;gap:8px;margin-bottom:14px}
+.auth-tab{flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13.5px;font-weight:600;color:var(--muted-2);cursor:pointer;transition:all .15s}
+.auth-tab.active{background:var(--accent);color:#111;border-color:var(--accent)}
+.auth-subtitle{font-size:12.5px;color:var(--muted-2);margin-bottom:18px;line-height:1.5}
+.auth-field{display:block;font-size:12.5px;color:var(--muted-2);margin-bottom:14px}
+.auth-field input{display:block;width:100%;margin-top:6px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px}
+.auth-field input:focus{outline:none;border-color:var(--accent-dim)}
+.auth-error{background:rgba(220,60,60,.12);border:1px solid rgba(220,60,60,.4);color:#e57373;border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+.auth-error.hidden{display:none}
+.auth-submit{width:100%;margin-top:4px}

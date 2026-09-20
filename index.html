@@ -24,6 +24,7 @@
   <p>Learn English through typing, listening, vocabulary and grammar.</p>
   <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle light or dark appearance" title="Toggle light/dark appearance">🌙</button>
   <div class="streak-pill" id="streakPill" title="Practice on consecutive days to build your streak"><span class="flame">🔥</span><span id="streakCount">0 day streak</span></div>
+  <button id="accountBtn" class="account-btn" type="button">🔑 Sign in</button>
 </header>
 
 <main class="container">
@@ -250,6 +251,22 @@
   <button id="scrollBottomBtn" class="scroll-fab" title="Scroll to bottom" type="button">↓</button>
 </div>
 
+<div id="authModalOverlay" class="auth-overlay hidden">
+  <div class="auth-modal">
+    <button id="authCloseBtn" class="auth-close" type="button" aria-label="Close">✕</button>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-mode="login">Log In</button>
+      <button type="button" class="auth-tab" data-mode="signup">Sign Up</button>
+    </div>
+    <p class="auth-subtitle" id="authSubtitle">Log in to sync your progress across devices.</p>
+    <form id="authForm">
+      <label class="auth-field">Email<input type="email" id="authEmail" required autocomplete="email"></label>
+      <label class="auth-field">Password<input type="password" id="authPassword" required minlength="6" autocomplete="current-password"></label>
+      <div id="authError" class="auth-error hidden"></div>
+      <button type="submit" class="button primary auth-submit" id="authSubmitBtn">Log In</button>
+    </form>
+  </div>
+</div>
 <div id="achievementToast" class="achievement-toast"><span class="toast-icon" id="toastIcon">🏆</span><div><span class="toast-title">Achievement unlocked</span><br><span class="toast-name" id="toastName"></span></div></div>
 <script src="script.js"></script>
 </body>
