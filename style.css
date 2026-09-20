@@ -309,3 +309,19 @@ footer{text-align:center;color:var(--muted-2);padding:25px 15px 40px;font-size:1
   .text-display{font-size:17px}
   .speed-control{margin-left:0}
 }
+
+/* ============ STREAK, BADGES & SHARE (added) ============ */
+.streak-pill{display:flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+.streak-pill .flame{font-size:16px;filter:grayscale(1);opacity:.5;transition:filter .2s,opacity .2s}
+.streak-pill.active .flame{filter:grayscale(0);opacity:1}
+.badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:8px}
+.badge-card{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;transition:opacity .2s,transform .15s}
+.badge-card.locked{opacity:.35}
+.badge-card .badge-icon{font-size:26px;display:block;margin-bottom:6px}
+.badge-card .badge-name{font-size:12px;font-weight:700;display:block}
+.badge-card .badge-desc{font-size:10.5px;color:var(--muted-2);display:block;margin-top:3px;line-height:1.4}
+.achievement-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:14px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;z-index:9999;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:90vw}
+.achievement-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.achievement-toast .toast-icon{font-size:28px}
+.achievement-toast .toast-title{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.achievement-toast .toast-name{font-size:14px;font-weight:700;color:var(--text)}
