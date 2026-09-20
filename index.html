@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "25ccfb1a584c4e9889acc5031edd7554"}'></script><!-- End Cloudflare Web Analytics -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -24,6 +23,7 @@
   <div class="brand"><span class="brand-mark">B</span>Bayanlingo</div>
   <p>Learn English through typing, listening, vocabulary and grammar.</p>
   <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle light or dark appearance" title="Toggle light/dark appearance">🌙</button>
+  <div class="streak-pill" id="streakPill" title="Practice on consecutive days to build your streak"><span class="flame">🔥</span><span id="streakCount">0 day streak</span></div>
 </header>
 
 <main class="container">
@@ -207,6 +207,7 @@
       <button class="tab-btn active" data-tab="overview">Overview</button>
       <button class="tab-btn" data-tab="weak">Weak Words</button>
       <button class="tab-btn" data-tab="cefr">CEFR Spread</button>
+      <button class="tab-btn" data-tab="badges">Badges</button>
     </div>
     <div class="tab-pane active" data-pane="overview">
       <div class="progress-summary">
@@ -222,6 +223,9 @@
     <div class="tab-pane" data-pane="cefr">
       <div class="cefr-row" id="cefrRow"></div>
     </div>
+    <div class="tab-pane" data-pane="badges">
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
     <button id="clearProgressBtn" class="text-button">Clear saved progress</button>
   </section>
 
@@ -236,7 +240,7 @@
     <div class="result-learning"><h3>Learning Report</h3><p id="resultLessonName">Custom text</p>
       <div class="result-columns"><div><h4>Vocabulary</h4><div class="vocab-flip-grid" id="resultVocabulary"></div></div><div><h4>Grammar Focus</h4><p id="resultGrammar"></p></div></div>
     </div>
-    <div class="result-actions"><button id="restartBtn" class="button primary">Try Again</button><button id="nextLessonBtn" class="button">Generate Another</button></div>
+    <div class="result-actions"><button id="restartBtn" class="button primary">Try Again</button><button id="nextLessonBtn" class="button">Generate Another</button><button id="shareResultBtn" class="button">📤 Share Result</button></div>
   </section>
 </main>
 <footer><p>Bayanlingo — Infinite local practice generator</p></footer>
@@ -246,6 +250,7 @@
   <button id="scrollBottomBtn" class="scroll-fab" title="Scroll to bottom" type="button">↓</button>
 </div>
 
+<div id="achievementToast" class="achievement-toast"><span class="toast-icon" id="toastIcon">🏆</span><div><span class="toast-title">Achievement unlocked</span><br><span class="toast-name" id="toastName"></span></div></div>
 <script src="script.js"></script>
 </body>
 </html>
