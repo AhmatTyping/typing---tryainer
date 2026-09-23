@@ -22,9 +22,10 @@ function updateStreak(){
 }
 function renderStreak(){
   const pill=$('streakPill'), label=$('streakCount'); if(!pill||!label)return;
-  const s=getStreakData(); const activeToday = s.lastDate===todayStr();
-  label.textContent = (s.count||0) + ((s.count||0)===1?' day streak':' day streak');
-  pill.classList.toggle('active', activeToday && (s.count||0)>0);
+  const s=getStreakData(); const activeToday = s.lastDate===todayStr(); const count=s.count||0;
+  label.textContent = String(count);
+  pill.title = count + (count===1?' day streak':' day streak') + ' — practice daily to build it';
+  pill.classList.toggle('active', activeToday && count>0);
 }
 
 /* ============ ACHIEVEMENTS / BADGES ============ */
@@ -238,7 +239,7 @@ function findMeaning(word){
     if(tip)return tip;
     tip=document.createElement('div');
     tip.id='arabicHoverTip';
-    tip.style.cssText='position:fixed;z-index:99999;display:none;max-width:320px;padding:9px 12px;border:1px solid #555;border-radius:8px;background:#111;color:#fff;font:14px/1.45 Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;text-align:right;direction:rtl;';
+    tip.style.cssText='position:fixed;z-index:99999;display:none;max-width:320px;padding:10px 14px;border:1px solid #c1614a;border-radius:8px;background:#1a1210;color:#f2e6dc;font:14px/1.5 "IBM Plex Sans",Arial,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);pointer-events:none;text-align:right;direction:rtl;';
     document.body.appendChild(tip);return tip;
   }
   function position(e){
@@ -608,7 +609,7 @@ function updateVoiceStatus(){
   const tag=isUSVoice(selectedVoice)?'US':isGBVoice(selectedVoice)?'UK':'English';
   $('voiceStatus').textContent=`✓ ${tag} voice`;$('voiceStatus').classList.add('live');
 }
-function stopSpeech(){speechToken++;if("speechSynthesis"in window)window.speechSynthesis.cancel()}
+function stopSpeech(){speechToken++;if("speechSynthesis"in window)window.speechSynthesis.cancel();clearHighlightTimers();clearSpeakingHighlight()}
 function speakHuman(s,rate=.86,onend=null){
   if(!s||!('speechSynthesis'in window))return;
   speechToken++;const token=speechToken;
@@ -628,16 +629,53 @@ function speakHuman(s,rate=.86,onend=null){
 }
 function speakWord(word,rate=.86){speakHuman(word,rate)}
 function speakCurrentOrNextWord(){const r=getWordRanges(),i=currentWordIndex();if(r[i])speakWord(r[i].word,.92)}
+function clearSpeakingHighlight(){
+  $('textDisplay')?.querySelectorAll('.practice-word.speaking-now').forEach(w=>w.classList.remove('speaking-now'));
+}
+function highlightWordAtAbsIndex(absIndex){
+  const ranges=getWordRanges();
+  let idx=ranges.findIndex(r=>absIndex>=r.start&&absIndex<r.end);
+  if(idx===-1) idx=ranges.findIndex(r=>r.start>=absIndex);
+  if(idx<0)return;
+  const words=$('textDisplay').querySelectorAll('.practice-word');
+  clearSpeakingHighlight();
+  if(words[idx]){ words[idx].classList.add('speaking-now'); words[idx].scrollIntoView({block:'nearest',inline:'nearest'}); }
+}
+let highlightTimers=[];
+function clearHighlightTimers(){ highlightTimers.forEach(t=>clearTimeout(t)); highlightTimers=[]; }
 function speakFullText(){
   if(!text)return;speechToken++;const token=speechToken;
   const synth=window.speechSynthesis;
-  const chunks=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text];let i=0;
+  const chunks=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text];
+  const offsets=[];{let acc=0;for(const c of chunks){offsets.push(acc);acc+=c.length;}}
+  let i=0;
   const next=()=>{
-    if(token!==speechToken||i>=chunks.length)return;
-    const u=new SpeechSynthesisUtterance(chunks[i++].trim()),v=getPreferredVoice();
+    clearHighlightTimers();
+    if(token!==speechToken||i>=chunks.length){ if(token===speechToken) clearSpeakingHighlight(); return; }
+    const chunkText=chunks[i], chunkOffset=offsets[i]; i++;
+    const trimmed=chunkText.trim();
+    const leadTrim=chunkText.length-chunkText.trimStart().length;
+    const rate=Math.max(.6,Math.min(1.05,Number($('speechRate').value)*.9));
+    const u=new SpeechSynthesisUtterance(trimmed),v=getPreferredVoice();
     if(v){u.voice=v;u.lang=v.lang}else u.lang=preferredAccent==='gb'?'en-GB':'en-US';
-    u.rate=Math.max(.6,Math.min(1.05,Number($('speechRate').value)*.9));u.pitch=1;u.volume=1;
-    u.onend=()=>setTimeout(next,100);u.onerror=()=>setTimeout(next,150);
+    u.rate=rate;u.pitch=1;u.volume=1;
+
+    /* Web Speech's onboundary event is unreliable — many voices (especially
+       local/offline ones) never fire it at all. Instead, estimate each word's
+       timing from its position and length at the current speaking rate, and
+       schedule the highlight to move on its own — this works with every voice. */
+    const wordMatches=[...trimmed.matchAll(/\S+/g)];
+    const baseWPM=155*rate;
+    const estDurationMs=Math.max(300,(wordMatches.length/baseWPM)*60000);
+    const totalChars=trimmed.length||1;
+    for(const m of wordMatches){
+      const delay=(m.index/totalChars)*estDurationMs;
+      const absIndex=chunkOffset+leadTrim+m.index;
+      highlightTimers.push(setTimeout(()=>{ if(token===speechToken) highlightWordAtAbsIndex(absIndex); }, delay));
+    }
+
+    u.onend=()=>{ clearHighlightTimers(); setTimeout(next,100); };
+    u.onerror=()=>{ clearHighlightTimers(); setTimeout(next,150); };
     synth.speak(u);
   };
   if(synth.speaking||synth.pending){ synth.cancel(); setTimeout(next,30); } else { next(); }
@@ -922,7 +960,7 @@ renderLibrary();
 
 /* ============ AUTH: account, login/signup, cloud progress sync ============ */
 const AUTH_TOKEN_KEY="bayanlingoAuthTokenV1";
-let authEmail=null, authMode="login";
+let authEmail=null, authMode="login", authIsPro=false;
 function getAuthToken(){ return localStorage.getItem(AUTH_TOKEN_KEY); }
 function setAuthToken(token){ if(token) localStorage.setItem(AUTH_TOKEN_KEY, token); else localStorage.removeItem(AUTH_TOKEN_KEY); }
 
@@ -952,7 +990,7 @@ function syncProgressIfLoggedIn(){
 
 function renderAuthUI(){
   const btn=$('accountBtn'); if(!btn) return;
-  if(authEmail){ btn.textContent='👤 '+authEmail; btn.title='Click to log out'; }
+  if(authEmail){ btn.textContent=(authIsPro?'⭐ ':'👤 ')+authEmail+(authIsPro?' · Pro':''); btn.title='Click to log out'; }
   else{ btn.textContent='🔑 Sign in'; btn.title='Log in or create an account'; }
 }
 
@@ -970,13 +1008,13 @@ function closeAuthModal(){ $('authModalOverlay').classList.add('hidden'); }
 
 async function doSignup(email,password){
   const data=await apiCall('/api/signup',{method:'POST', body:JSON.stringify({email,password})});
-  setAuthToken(data.token); authEmail=data.email;
+  setAuthToken(data.token); authEmail=data.email; authIsPro=!!data.isPro;
   await apiCall('/api/progress',{method:'POST', body:JSON.stringify({data:getFullLocalState()})}).catch(()=>{});
   renderAuthUI();
 }
 async function doLogin(email,password){
   const data=await apiCall('/api/login',{method:'POST', body:JSON.stringify({email,password})});
-  setAuthToken(data.token); authEmail=data.email;
+  setAuthToken(data.token); authEmail=data.email; authIsPro=!!data.isPro;
   try{
     const remote=await apiCall('/api/progress',{method:'GET'});
     if(remote.data){ applyFullState(remote.data); renderProgress(); }
@@ -986,7 +1024,7 @@ async function doLogin(email,password){
 }
 async function doLogout(){
   try{ await apiCall('/api/logout',{method:'POST'}); }catch(e){}
-  setAuthToken(null); authEmail=null;
+  setAuthToken(null); authEmail=null; authIsPro=false;
   renderAuthUI();
 }
 async function checkAuthOnLoad(){
@@ -994,7 +1032,7 @@ async function checkAuthOnLoad(){
   if(!token) return;
   try{
     const meData=await apiCall('/api/me',{method:'GET'});
-    authEmail=meData.email;
+    authEmail=meData.email; authIsPro=!!meData.isPro;
     const remote=await apiCall('/api/progress',{method:'GET'});
     if(remote.data){ applyFullState(remote.data); renderProgress(); }
   }catch(e){ setAuthToken(null); authEmail=null; }

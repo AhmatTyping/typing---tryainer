@@ -15,13 +15,17 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="google-site-verification" content="on1cpjBUnOutAT7VMZtTZALtSvN9SVpWAAduEvNYJ7E" />
 <title>Bayanlingo — Infinite English Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 <script>(function(){try{if(localStorage.getItem('typingTrainerThemeV1')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
 <body>
 <header class="header">
-  <div class="brand"><span class="brand-mark">B</span>Bayanlingo</div>
+  <div class="brand"><span class="brand-mark"><span class="mark-ar">ب</span><span class="mark-en">B</span></span>Bayanlingo</div>
   <p>Learn English through typing, listening, vocabulary and grammar.</p>
+  <p class="header-ar-subtitle" dir="rtl" lang="ar">تعلم الإنجليزية من خلال ممارسة الكتابة والقراءة والاستماع معا.</p>
   <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle light or dark appearance" title="Toggle light/dark appearance">🌙</button>
   <div class="streak-pill" id="streakPill" title="Practice on consecutive days to build your streak"><span class="flame">🔥</span><span id="streakCount">0 day streak</span></div>
   <button id="accountBtn" class="account-btn" type="button">🔑 Sign in</button>
